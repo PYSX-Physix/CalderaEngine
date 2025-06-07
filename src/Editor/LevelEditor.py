@@ -6,8 +6,16 @@ class LevelEditor:
     def __init__(self, project_path=None):
         self.project_dir = None
         self.root = tk.Tk()
+        self.drawer_visable = False
         self.root.title("Caldera Engine")
         self.root.geometry("900x900")
+        self.drawer = tk.Frame(self.root, )
+        self.drawer.pack(side=tk.LEFT, fill=tk.Y, pady=10)
+        self.toggle_button = tk.Button(self.root, text="Content Drawer",)
+        self.content_label = tk.Label(self.drawer, text="Content")
+        self.content_label.pack()
+        self.project_list = tk.Listbox(self.drawer)
+        self.project_list.pack(fill=tk.BOTH, expand=True)
         self.create_menubar()
         self.game_canvas_container = tk.Frame(self.root)
         self.game_canvas_container.pack(fill=tk.BOTH)
@@ -33,4 +41,13 @@ class LevelEditor:
 
         self.root.config(menu=menubar)
 
-    
+    def toggle_content_drawer(self):
+        if self.drawer_visable:
+            self.drawer.pack_info()
+        else:
+            self.drawer.pack(side=tk.LEFT, fill=tk.Y, padx=5)
+        
+        self.drawer_visable = not self.drawer_visable
+
+    def create_content_drawer(self):
+        print(f"Content Directory:")
