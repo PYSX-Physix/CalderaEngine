@@ -1,6 +1,7 @@
 #ignore all JSON files
 settings.json
 firebase_config.json
+projects.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
