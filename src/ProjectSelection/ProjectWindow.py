@@ -108,6 +108,7 @@ class ProjectWindow:
         try:
             with open(os.path.join(basepath, "ProjectSelection", "projects.json"), "r") as file:
                 self.projects = json.load(file)
+                self.notebook.select(self.load_project_frame)  # Switch to load project tab
 
             if not self.projects:
                 self.project_list.insert(tk.END, "No saved projects found.")

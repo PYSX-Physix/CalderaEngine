@@ -19,6 +19,11 @@ class LevelEditor:
         self.create_menubar()
         self.game_canvas_container = tk.Frame(self.root)
         self.game_canvas_container.pack(fill=tk.BOTH)
+        if self.drawer_visable == False:
+            self.drawer.pack_forget()
+        else:
+            self.drawer.pack(side=tk.LEFT, fill=tk.Y, padx=10)
+
         if project_path == None:
             print("No project is selected")
         elif project_path != None:
@@ -39,11 +44,15 @@ class LevelEditor:
         edit_menu.add_command(label="Preferences")
         menubar.add_cascade(label="Edit", menu=edit_menu)
 
+        view_menu = tk.Menu(menubar, tearoff=0)
+        view_menu.add_checkbutton(label="Content Drawer", command=self.toggle_content_drawer)
+        menubar.add_cascade(label="View", menu=view_menu)
+
         self.root.config(menu=menubar)
 
     def toggle_content_drawer(self):
         if self.drawer_visable:
-            self.drawer.pack_info()
+            self.drawer.pack_forget()
         else:
             self.drawer.pack(side=tk.LEFT, fill=tk.Y, padx=5)
         
