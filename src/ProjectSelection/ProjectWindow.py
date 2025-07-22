@@ -127,6 +127,22 @@ class ProjectWindow:
         project_name = self.project_name.get().strip()
         project_path = self.project_path.get().strip()
 
+        # Adds the needed code for the project.py file
+        needed_project_code =f"""
+import sys
+import os
+
+# --- Ensure CalderaEngine 'src' is on sys.path ---
+engine_src = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
+if engine_src not in sys.path:
+    sys.path.insert(0, engine_src)
+# -----------------------------------------------
+
+class {project_name}():
+    def __init__(self):
+        pass
+"""
+
         if not project_name or not project_path:
             print("Please enter a valid project name and path.")
             return
@@ -145,13 +161,22 @@ class ProjectWindow:
         for directory in directories:
             os.makedirs(os.path.join(target_dir, directory), exist_ok=True)
 
+        # Need variables to write starting code for project
+        project_file = f"{project_name}.py"
+        project_file_path = os.path.join(target_dir, project_file)
+
         # Create blank files
-        files = ["requirements.txt", "README.md", f"{project_name}.py"]
+        files = ["requirements.txt", "README.md", project_file]
         for file in files:
             open(os.path.join(target_dir, file), "w").close()
 
+        # Write the needed code for the project
+        with open(project_file_path, "w") as f:
+            f.write(needed_project_code)
+
         print(f"Project '{project_name}' created successfully at {target_dir}")
 
+        
+        self.root.destroy()
         from Editor.LevelEditor import LevelEditor
         LevelEditor(target_dir)
-        self.root.destroy()

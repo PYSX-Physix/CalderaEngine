@@ -3,8 +3,8 @@ from tkinter import scrolledtext
 import os
 import keyword
 import re
-import pkg_resources
 import importlib
+import importlib.metadata
 import inspect
 
 class CodeEditor(tk.Toplevel):
@@ -16,7 +16,7 @@ class CodeEditor(tk.Toplevel):
         self.geometry("800x600")
         self.filename = filename
         self.language = language
-
+        self.project_dir= project_dir
         self.text = scrolledtext.ScrolledText(self.editor_root, wrap=tk.NONE, undo=True)
         self.text.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
         self.import_list_frame = tk.Frame(self.editor_root, width=200)
@@ -34,38 +34,59 @@ class CodeEditor(tk.Toplevel):
         self.apply_syntax_highlighting()
 
     def create_import_list(self):
-        self.import_title = tk.Label(self.import_list_frame, text="Imports", font=("Arial", 14))
-        self.import_title.pack(side=tk.TOP, fill=tk.X)
+            self.import_title = tk.Label(self.import_list_frame, text="Imports", font=("Arial", 14))
+            self.import_title.pack(side=tk.TOP, fill=tk.X)
 
-        # Get installed PyPI packages
-        installed_packages = sorted([pkg.key for pkg in pkg_resources.working_set])
+            # Use importlib.metadata to get installed packages
+            installed_packages = sorted([dist.metadata['Name'] for dist in importlib.metadata.distributions() if 'Name' in dist.metadata])
 
-        # --- Import form ---
-        import_form = tk.Frame(self.import_list_frame)
-        import_form.pack(side=tk.TOP, fill=tk.X, pady=(5, 0))
+            # Use this to find local modules
+            def find_local_modules(base_dir, prefix=""):
+                modules = []
+                for root, dirs, files in os.walk(base_dir):
+                    rel_path = os.path.relpath(root, base_dir)
+                    if rel_path == ".":
+                        rel_path = ""
+                    package_prefix = prefix + ("." if prefix and rel_path else "") + rel_path.replace(os.sep, ".") if rel_path != "" else prefix
+                    # Add __init__.py as package
+                    if "__init__.py" in files and package_prefix:
+                        modules.append(package_prefix)
+                        # Add .py files as modules
+                    for file in files:
+                        if file.endswith(".py") and file != "__init__.py":
+                            mod_name = file[:-3]
+                            full_mod = package_prefix + ("." if package_prefix else "") + mod_name
+                            modules.append(full_mod)
+                return modules
 
-        self.import_var = tk.StringVar(import_form)
-        self.import_var.set("Select module")
-        self.import_menu = tk.OptionMenu(import_form, self.import_var, *installed_packages, command=self.update_from_import_menu)
-        self.import_menu.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            local_modules = find_local_modules(self.project_dir)
+            all_modules = sorted(set(installed_packages + local_modules))
 
-        # --- From-import form ---
-        from_import_form = tk.Frame(self.import_list_frame)
-        from_import_form.pack(side=tk.TOP, fill=tk.X, pady=(5, 10))
+            # --- Import form ---
+            import_form = tk.Frame(self.import_list_frame)
+            import_form.pack(side=tk.TOP, fill=tk.X, pady=(5, 0))
 
-        self.from_import_var = tk.StringVar(from_import_form)
-        self.from_import_var.set("Select class/function")
-        self.from_import_menu = tk.OptionMenu(from_import_form, self.from_import_var, "")
-        self.from_import_menu.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            self.import_var = tk.StringVar(import_form)
+            self.import_var.set("Select module")
+            self.import_menu = tk.OptionMenu(import_form, self.import_var, *all_modules, command=self.update_from_import_menu)
+            self.import_menu.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        # Single confirm button for both
-        self.confirm_import_btn = tk.Button(self.import_list_frame, text="Confirm", command=self.confirm_import_action)
-        self.confirm_import_btn.pack(side=tk.TOP, padx=5, pady=(5, 0))
+            # --- From-import form ---
+            from_import_form = tk.Frame(self.import_list_frame)
+            from_import_form.pack(side=tk.TOP, fill=tk.X, pady=(5, 10))
+
+            self.from_import_var = tk.StringVar(from_import_form)
+            self.from_import_var.set("Select class/function")
+            self.from_import_menu = tk.OptionMenu(from_import_form, self.from_import_var, "")
+            self.from_import_menu.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+            # Single confirm button for both
+            self.confirm_import_btn = tk.Button(self.import_list_frame, text="Confirm", command=self.confirm_import_action)
+            self.confirm_import_btn.pack(side=tk.TOP, padx=5, pady=(5, 0))
 
     def update_from_import_menu(self, selected_module):
-        import importlib
         import inspect
-        import pkg_resources
+        import importlib.metadata
 
         members = []
         tried_modules = []
@@ -77,17 +98,18 @@ class CodeEditor(tk.Toplevel):
         except Exception:
             # Try to get top-level modules from the distribution
             try:
-                dist = pkg_resources.get_distribution(selected_module)
-                top_level = dist.get_metadata('top_level.txt').splitlines()
-                for top_mod in top_level:
-                    try:
-                        mod = importlib.import_module(top_mod)
-                        tried_modules.append(top_mod)
-                        members = [name for name, obj in inspect.getmembers(mod) if inspect.isclass(obj) or inspect.isfunction(obj)]
-                        if members:
-                            break
-                    except Exception:
-                        continue
+                dist = importlib.metadata.distribution(selected_module)
+                top_level = dist.read_text('top_level.txt')
+                if top_level:
+                    for top_mod in top_level.splitlines():
+                        try:
+                            mod = importlib.import_module(top_mod)
+                            tried_modules.append(top_mod)
+                            members = [name for name, obj in inspect.getmembers(mod) if inspect.isclass(obj) or inspect.isfunction(obj)]
+                            if members:
+                                break
+                        except Exception:
+                            continue
             except Exception:
                 pass
 

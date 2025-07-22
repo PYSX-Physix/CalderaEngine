@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from Editor.ProjectSettings import ProjectSettings
+from Editor.Settings.ProjectSettings import ProjectSettings
+from Editor.Settings.EditorSettings import EditorSettingsWindow
 import pygame
 import os
 
@@ -53,19 +54,19 @@ class LevelEditor:
         menubar=tk.Menu(self.root)
 
         file_menu = tk.Menu(menubar, tearoff=0)
-        file_menu.add_command(label="Open", accelerator="Cmd+O")
-        file_menu.add_command(label="Save", accelerator="Cmd+S")
+        file_menu.add_command(label="Open")
+        file_menu.add_command(label="Save")
         menubar.add_cascade(label="File", menu=file_menu)
 
         edit_menu = tk.Menu(menubar, tearoff=0)
-        edit_menu.add_command(label="Undo", accelerator="Cmd+Z")
-        edit_menu.add_command(label="Redo", accelerator="Cmd+Y")
-        edit_menu.add_command(label="Cut", accelerator="Cmd+X")
-        edit_menu.add_command(label="Copy", accelerator="Cmd+C")
-        edit_menu.add_command(label="Paste", accelerator="Cmd+V")
+        edit_menu.add_command(label="Undo")
+        edit_menu.add_command(label="Redo")
+        edit_menu.add_command(label="Cut")
+        edit_menu.add_command(label="Copy")
+        edit_menu.add_command(label="Paste")
         edit_menu.add_separator()
         edit_menu.add_command(label="Project Settings", command=self.open_project_settings)
-        edit_menu.add_command(label="Preferences")
+        edit_menu.add_command(label="Preferences", command=self.open_editor_settings)
         menubar.add_cascade(label="Edit", menu=edit_menu)
 
         view_menu = tk.Menu(menubar, tearoff=0)
@@ -112,8 +113,6 @@ class LevelEditor:
                     self.project_tree.insert(parent, tk.END, text=entry)
         except Exception as e:
             self.project_tree.insert(parent, tk.END, text=f"Error: {e}")
-
-# ...existing code...
 
     def on_tree_left_click(self, event):
         # Show context menu on left click
@@ -163,8 +162,6 @@ class LevelEditor:
                 self.create_content_drawer()
             except Exception as e:
                 tk.messagebox.showerror("Error", f"Could not delete: {e}")
-
-# ...existing code...
 
     def add_file(self):
         import tkinter.simpledialog
@@ -249,3 +246,6 @@ class LevelEditor:
 
     def open_project_settings(self):
         ProjectSettings()
+
+    def open_editor_settings(self):
+        EditorSettingsWindow()
