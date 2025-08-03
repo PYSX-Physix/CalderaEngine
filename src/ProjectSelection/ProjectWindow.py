@@ -4,6 +4,7 @@ import os
 import json
 from Shared.Paths import basepath
 import subprocess
+from Source.Logging.LoggingFunctions import PrintToLogs, LogCategoryEnum as LogType
 
 class ProjectWindow:
     def __init__(self):
@@ -81,7 +82,7 @@ class ProjectWindow:
         """Loads project based on the user's selection."""
         selected_index = self.project_list.curselection()
         if not selected_index:  # No selection made
-            print("Please select a project.")
+            PrintToLogs(LogType.Error, "Please select a project.")
             return
 
         selected_project = self.projects[selected_index[0]]  # Get project from JSON
@@ -89,15 +90,14 @@ class ProjectWindow:
         project_path = selected_project.get("project_path", "")
 
         if not project_path or not os.path.exists(project_path):
-            print(f"Error: Project '{project_name}' has an invalid path.")
+            PrintToLogs(LogType.Error, f"Project '{project_name}' has an invalid path.")
             return
 
-        print(f"Loading project: {project_name} at {project_path}")
+        PrintToLogs(LogType.Log, f"Loading project: {project_name} at {project_path}")
 
         # Open the project directory
-        from Editor.LevelEditor import LevelEditor
-
         self.root.destroy()
+        from Editor.LevelEditor import LevelEditor
         LevelEditor(project_path)
 
 
@@ -129,22 +129,13 @@ class ProjectWindow:
 
         # Adds the needed code for the project.py file
         needed_project_code =f"""
-import sys
-import os
-
-# --- Ensure CalderaEngine 'src' is on sys.path ---
-engine_src = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
-if engine_src not in sys.path:
-    sys.path.insert(0, engine_src)
-# -----------------------------------------------
-
 class {project_name}():
     def __init__(self):
         pass
 """
 
         if not project_name or not project_path:
-            print("Please enter a valid project name and path.")
+            PrintToLogs(LogType.Error, "Please enter a valid project name and path.")
             return
 
         # Define target project directory
@@ -152,7 +143,7 @@ class {project_name}():
 
         # Check if the directory already exists
         if os.path.exists(target_dir):
-            print("Project directory already exists!")
+            PrintToLogs(LogType.Error, "Project directory already exists!")
             return
 
         # Create project directories
@@ -174,8 +165,7 @@ class {project_name}():
         with open(project_file_path, "w") as f:
             f.write(needed_project_code)
 
-        print(f"Project '{project_name}' created successfully at {target_dir}")
-
+        PrintToLogs(LogType.Log, f"Project '{project_name}' created successfully at {target_dir}")
         
         self.root.destroy()
         from Editor.LevelEditor import LevelEditor

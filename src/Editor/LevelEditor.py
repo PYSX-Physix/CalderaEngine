@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from Source.Logging.LoggingFunctions import PrintToLogs, LogCategoryEnum as LogType
 from Editor.Settings.ProjectSettings import ProjectSettings
 from Editor.Settings.EditorSettings import EditorSettingsWindow
 import pygame
@@ -9,7 +10,7 @@ class LevelEditor:
     def __init__(self, project_path=None):
         self.project_dir = None
         self.root = tk.Tk()
-        self.drawer_visable = True
+        self.drawer_visable = False
         self.root.title("Caldera Engine")
         self.root.geometry("900x900")
         self.drawer = tk.Frame(self.root)
@@ -43,9 +44,9 @@ class LevelEditor:
             self.drawer.pack(side=tk.LEFT, fill=tk.Y, padx=10)
 
         if project_path == None:
-            print("No project is selected")
+            PrintToLogs(LogType.Error, "No project is selected")
         elif project_path != None:
-            print(f"Project path is: {project_path}")
+            PrintToLogs(LogType.Log, f"Project path is: {project_path}")
             self.project_dir = project_path
         self.create_content_drawer()
         self.root.mainloop()
@@ -74,6 +75,9 @@ class LevelEditor:
         menubar.add_cascade(label="View", menu=view_menu)
 
         self.root.config(menu=menubar)
+
+    def create_game_canvas(self):
+        pass
 
     def toggle_content_drawer(self):
         if self.drawer_visable:
